@@ -23,17 +23,30 @@ func (m myslice) Swap(i, j int) {
 	m[i], m[j] = m[j], m[i]
 }
 
-var price [24]float64
+var price [25]float64
 var day float64
 
-func cost(s1, s2 string) (item float64) {
+func cost(s1, s2 string) (item float64, minute int) {
 	d1, _ := strconv.Atoi(s1[:2])
 	d2, _ := strconv.Atoi(s2[0:2])
-	item += float64(d2-d1) * day
 	h1, _ := strconv.Atoi(s1[3:5])
 	h2, _ := strconv.Atoi(s2[3:5])
 	m1, _ := strconv.Atoi(s1[6:])
 	m2, _ := strconv.Atoi(s2[6:])
+	for d1 < d2 || h1 < h2 || m1 < m2 {
+		minute++
+		item += price[h1]
+		m1++
+		if m1 >= 60 {
+			m1 = 0
+			h1++
+		}
+		if h1 >= 24 {
+			h1 = 0
+			d1++
+		}
+	}
+	return item, minute
 }
 func main() {
 	online := make(map[string][]string)
@@ -83,22 +96,12 @@ func main() {
 				}
 				k++
 			}
-			t1, _ := strconv.Atoi(online[name[i]][k-1][3:5])
-			t2, _ := strconv.Atoi(offline[name[i]][j][3:5])
-			d := t2 - t1
-			t1, _ = strconv.Atoi(online[name[i]][k-1][6:8])
-			t2, _ = strconv.Atoi(offline[name[i]][j][6:8])
-			fmt.Println(t1, t2)
-			t := 0
-			h := t2 - t1
-			t1, _ = strconv.Atoi(online[name[i]][k-1][9:])
-			t2, _ = strconv.Atoi(offline[name[i]][j][9:])
-			m := t2 - t1
-			item := cost(offline[name[i]][k-1][3:], offline[name[i]][j][3:])
-			minute := d*24*60 + h*60 + m
-			fmt.Printf("%s %s %d $%.2f\n", online[name[i]][k-1][3:], offline[name[i]][j][3:], minute, item)
+			item, minute := cost(online[name[i]][k-1][3:], offline[name[i]][j][3:])
+			fmt.Printf("%s %s %d $%.2f\n", online[name[i]][k-1][3:], offline[name[i]][j][3:], minute, item/100.0)
 			total += item
 		}
-		fmt.Printf("Total amount: $%.2f\n", total)
+		fmt.Printf("Total amount: $%.2f\n", total/100.0)
 	}
 }
+
+// 25 15 no-zero return value
